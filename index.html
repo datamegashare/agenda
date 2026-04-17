@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BRH · Tareas</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --bg:      #f1f5f9;
+    --surface: #ffffff;
+    --border:  #e2e8f0;
+    --accent:  #d97706;
+    --text:    #1e293b;
+    --muted:   #64748b;
+    --green:   #16a34a;
+    --red:     #dc2626;
+    --radius:  12px;
+    --shadow:  0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 24px;
+  }
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 48px 40px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .login-logo  { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; color: var(--accent); letter-spacing: 3px; margin-bottom: 4px; }
+  .login-sub   { font-size: 0.78rem; color: var(--muted); margin-bottom: 36px; letter-spacing: 0.05em; }
+  .login-title { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .login-desc  { font-size: 0.78rem; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+  #g-btn-wrap  { display: flex; justify-content: center; }
+
+  /* ── DENEGADO ── */
+  #denied-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .denied-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .denied-icon  { font-size: 3rem; margin-bottom: 16px; display: block; }
+  .denied-title { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+  .denied-msg   { font-size: 0.78rem; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+  .denied-email { background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font-size: 0.78rem; color: var(--muted); margin-bottom: 20px; }
+  .btn-logout   { padding: 8px 20px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 0.78rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+  .btn-logout:hover { background: #f8fafc; }
+
+  /* ── LOADING ── */
+  #loading-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 16px;
+  }
+  .spinner { width: 34px; height: 34px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 0.82rem; color: var(--muted); }
+
+  /* ── APP ── */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* Header */
+  #app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+  }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--accent); letter-spacing: 3px; white-space: nowrap; }
+  .header-sep { width: 1px; height: 28px; background: var(--border); }
+  .header-info { flex: 1; }
+  .header-title { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+  .header-sub   { font-size: 0.68rem; color: var(--muted); margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .user-badge { font-size: 0.68rem; color: var(--surface); background: var(--accent); padding: 3px 11px; border-radius: 10px; white-space: nowrap; }
+  .btn-signout { font-size: 0.68rem; color: var(--muted); background: none; border: none; cursor: pointer; text-decoration: underline; font-family: 'DM Sans', sans-serif; }
+
+  /* Content */
+  #app-content {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 32px 16px 48px;
+  }
+  .main-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 760px;
+    padding: 28px 32px;
+  }
+
+  /* Greeting */
+  .greeting {
+    margin-bottom: 24px;
+  }
+  .greeting-hi {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.9rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .greeting-msg {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Textarea zone */
+  .field-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .char-count { font-weight: 400; letter-spacing: 0; text-transform: none; }
+
+  #texto-tareas {
+    width: 100%;
+    height: 360px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 0.82rem;
+    line-height: 1.75;
+    color: var(--text);
+    background: #fafbfc;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.18s;
+    tab-size: 2;
+  }
+  #texto-tareas:focus { border-color: var(--accent); background: #fff; }
+  #texto-tareas::placeholder { color: #b0bec5; }
+
+  /* Preview */
+  #preview-area {
+    margin-top: 18px;
+    display: none;
+  }
+  .preview-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .preview-dias {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .preview-dia {
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    overflow: hidden;
+  }
+  .preview-dia-header {
+    background: #f8fafc;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-dia-fecha {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .preview-dia-hora {
+    font-size: 0.68rem;
+    color: var(--muted);
+    background: #eef2f8;
+    padding: 2px 8px;
+    border-radius: 5px;
+  }
+  .preview-dia-count {
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+  .preview-tareas {
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .preview-tarea {
+    font-size: 0.78rem;
+    color: var(--text);
+    line-height: 1.5;
+    display: flex;
+    gap: 8px;
+  }
+  .tarea-num {
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 14px;
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    margin-top: 2px;
+  }
+  .tarea-txt { color: var(--muted); }
+
+  /* Botones */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border-radius: 8px;
+    border: 1px solid;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.16s;
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  .btn-primary {
+    background: var(--accent);
+    border-color: #b45309;
+    color: white;
+  }
+  .btn-primary:hover:not(:disabled) { background: #b45309; }
+  .btn-secondary {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--muted);
+  }
+  .btn-secondary:hover:not(:disabled) { background: #f8fafc; }
+  .btn-green {
+    background: var(--green);
+    border-color: #15803d;
+    color: white;
+  }
+  .btn-green:hover:not(:disabled) { background: #15803d; }
+  .btn-danger {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--red);
+  }
+  .btn-danger:hover:not(:disabled) { background: #fef2f2; }
+
+  /* Estado / resultado */
+  #estado-area {
+    margin-top: 18px;
+    display: none;
+  }
+  .estado-box {
+    border-radius: 9px;
+    padding: 14px 18px;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    border: 1px solid;
+  }
+  .estado-ok    { background: #f0fdf4; border-color: #86efac; color: #166534; }
+  .estado-error { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+  .estado-info  { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+
+  .resultado-lista {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .res-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.76rem;
+  }
+  .res-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .res-dot-ok     { background: var(--green); }
+  .res-dot-existe { background: var(--accent); }
+  .res-dot-error  { background: var(--red); }
+
+  /* Divisor */
+  .divider { height: 1px; background: var(--border); margin: 22px 0; }
+
+  @media (max-width: 500px) {
+    .main-card { padding: 20px 16px; }
+    #texto-tareas { height: 280px; }
+    .btn-row { flex-direction: column; }
+    .btn { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     CONFIGURACIÓN  —  editá estas dos líneas
+     ══════════════════════════════════════════════════════════ -->
+<script>
+  var CLIENT_ID = '985022387906-5h3qtmq6jifdl5jdv77o4amf9nb3mcdn.apps.googleusercontent.com';
+  var APP_URL   = 'https://script.google.com/macros/s/AKfycbxCmxu2LOYOvzl8GkX6bxnRswGkW6a2jTsPqGfbGo0lOGKiHuG3iRL2uQs5DSB1NfY7RA/exec';
+</script>
+<!-- ══════════════════════════════════════════════════════════ -->
+
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">BRH · Tareas</div>
+    <div class="login-sub">Registro diario de actividades</div>
+    <div class="login-title">Iniciá sesión para continuar</div>
+    <div class="login-desc">Acceso restringido a usuarios autorizados.<br>Usá tu cuenta de Google.</div>
+    <div id="g-btn-wrap"></div>
+  </div>
+</div>
+
+<!-- ACCESO DENEGADO -->
+<div id="denied-screen">
+  <div class="denied-box">
+    <span class="denied-icon">🔒</span>
+    <div class="denied-title">Acceso no autorizado</div>
+    <div class="denied-msg">Tu cuenta no tiene permiso para acceder a esta aplicación.<br>Contactá al administrador.</div>
+    <div class="denied-email" id="denied-email-txt">—</div>
+    <button class="btn-logout" onclick="signOut()">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div class="loading-text">Verificando acceso...</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <div id="app-header">
+    <div class="logo">BRH</div>
+    <div class="header-sep"></div>
+    <div class="header-info">
+      <div class="header-title">Tareas Diarias</div>
+      <div class="header-sub">→ Google Calendar</div>
+    </div>
+    <div class="header-right">
+      <div class="user-badge" id="user-badge">—</div>
+      <button class="btn-signout" onclick="signOut()">salir</button>
+    </div>
+  </div>
+
+  <div id="app-content">
+    <div class="main-card">
+
+      <div class="greeting">
+        <div class="greeting-hi" id="greeting-hi">Hola!</div>
+        <div class="greeting-msg" id="greeting-msg">Pegá el texto de la semana, verificá y cargá al calendario.</div>
+      </div>
+
+      <div class="field-label">
+        Texto de actividades
+        <span class="char-count" id="char-count">0 caracteres</span>
+      </div>
+      <textarea
+        id="texto-tareas"
+        placeholder="10 abr 2026 Viernes&#10;3 IS&#10;2 DataMegaShare, integrar lecturas de clima al sitio&#10;1 Herramientas: Mejora de Dashboard WEB&#10;0 Home Office&#10;&#10;9 abr 2026 Jueves&#10;3  Rio Tinto Odoo: demo 14:30 a 15:30&#10;..."
+      ></textarea>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="verificar()" id="btn-verificar">
+          Verificar
+        </button>
+        <button class="btn btn-secondary" onclick="limpiar()" id="btn-limpiar">
+          Limpiar
+        </button>
+      </div>
+
+      <!-- Preview de días parseados -->
+      <div id="preview-area">
+        <div class="divider"></div>
+        <div class="preview-title">Vista previa — días detectados</div>
+        <div class="preview-dias" id="preview-dias"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="cargar()" id="btn-cargar">
+            Cargar al calendario
+          </button>
+          <button class="btn btn-danger" onclick="limpiar()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+
+      <!-- Resultado de la carga -->
+      <div id="estado-area">
+        <div class="divider" style="margin-top:14px;"></div>
+        <div id="estado-box" class="estado-box"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+
+<script>
+// ── ESTADO GLOBAL ────────────────────────────────────────────
+var _accessToken = null;
+var _userEmail   = null;
+var _userName    = null;
+var _diasParseados = [];
+
+// ── INIT GOOGLE SIGN-IN ──────────────────────────────────────
+function initGSI() {
+  if (typeof google === 'undefined') {
+    setTimeout(initGSI, 200);
+    return;
+  }
+  var client = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/calendar openid email profile',
+    callback: onTokenReceived
+  });
+  google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    callback:  onIdToken
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('g-btn-wrap'),
+    { theme: 'outline', size: 'large', text: 'signin_with', locale: 'es' }
+  );
+
+  // Guardar el cliente para usarlo luego
+  window._tokenClient = client;
+}
+
+function onIdToken(resp) {
+  // El botón de Sign-In devuelve un id_token, necesitamos un access_token
+  // Solicitamos el access_token al hacer click en el botón
+  showScreen('loading');
+  window._tokenClient.requestAccessToken({ prompt: '' });
+}
+
+// Cuando GSI carga, override el botón para usar el flujo de token
+window.addEventListener('load', function() {
+  // Esperar a que cargue GSI
+  var check = setInterval(function() {
+    if (typeof google !== 'undefined' && google.accounts) {
+      clearInterval(check);
+      setupTokenFlow();
+    }
+  }, 100);
+});
+
+function setupTokenFlow() {
+  window._tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/calendar email profile openid',
+    callback: onTokenReceived
+  });
+
+  // Renderizar botón de login que directamente pide token
+  var btn = document.createElement('button');
+  btn.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 20px;border:1px solid #dadce0;border-radius:6px;background:#fff;font-family:"DM Sans",sans-serif;font-size:0.88rem;color:#3c4043;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.1);transition:background 0.15s;';
+  btn.onmouseover = function() { btn.style.background = '#f8f9fa'; };
+  btn.onmouseout  = function() { btn.style.background = '#fff'; };
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/></svg>Iniciar sesión con Google';
+  btn.onclick = function() {
+    showScreen('loading');
+    window._tokenClient.requestAccessToken({ prompt: 'select_account' });
+  };
+  var wrap = document.getElementById('g-btn-wrap');
+  wrap.innerHTML = '';
+  wrap.appendChild(btn);
+}
+
+async function onTokenReceived(resp) {
+  if (resp.error) {
+    showScreen('login');
+    return;
+  }
+  _accessToken = resp.access_token;
+
+  // Obtener info del usuario
+  try {
+    var r = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: 'Bearer ' + _accessToken }
+    });
+    var info = await r.json();
+    _userEmail = info.email || '';
+    _userName  = info.given_name || info.name || _userEmail.split('@')[0];
+  } catch(e) {
+    _userEmail = '';
+    _userName  = 'Usuario';
+  }
+
+  // Verificar acceso en el backend
+  try {
+    var pingUrl = APP_URL + '?action=ping&token=' + encodeURIComponent(_accessToken);
+    var pr = await fetch(pingUrl);
+    var pd = await pr.json();
+    if (!pd.ok) {
+      document.getElementById('denied-email-txt').textContent = _userEmail;
+      showScreen('denied');
+      return;
+    }
+  } catch(e) {
+    // Si el backend falla, mostrar error suave pero dejar pasar
+    // (para desarrollo local)
+    console.warn('Backend no disponible:', e.message);
+  }
+
+  // Mostrar app
+  var hora = new Date().getHours();
+  var saludo = hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches';
+  document.getElementById('greeting-hi').textContent = saludo + ', ' + _userName + '!';
+  document.getElementById('user-badge').textContent = _userEmail;
+  showScreen('app');
+}
+
+// ── PANTALLAS ────────────────────────────────────────────────
+function showScreen(name) {
+  ['login','denied','loading','app'].forEach(function(id) {
+    var el = document.getElementById(id + '-screen') || document.getElementById(id);
+    if (!el) return;
+    el.style.display = 'none';
+  });
+  var target = document.getElementById(name + '-screen') || document.getElementById(name);
+  if (target) target.style.display = name === 'app' ? 'flex' : 'flex';
+}
+
+function signOut() {
+  if (_accessToken) google.accounts.oauth2.revoke(_accessToken, function(){});
+  _accessToken = null;
+  _userEmail   = null;
+  limpiarTodo();
+  showScreen('login');
+}
+
+// ── TEXTAREA ─────────────────────────────────────────────────
+document.getElementById('texto-tareas').addEventListener('input', function() {
+  document.getElementById('char-count').textContent = this.value.length + ' caracteres';
+  // Ocultar preview y estado si se edita
+  document.getElementById('preview-area').style.display  = 'none';
+  document.getElementById('estado-area').style.display   = 'none';
+});
+
+// ── VERIFICAR ────────────────────────────────────────────────
+function verificar() {
+  var texto = document.getElementById('texto-tareas').value.trim();
+  if (!texto) { mostrarEstado('info', 'Pegá el texto de la semana primero.'); return; }
+
+  _diasParseados = parsearTextoLocal(texto);
+
+  if (!_diasParseados.length) {
+    mostrarEstado('error', 'No se encontraron fechas válidas.<br>Asegurate de que el formato sea: <strong>10 abr 2026 Viernes</strong>');
+    return;
+  }
+
+  // Mostrar preview
+  renderPreview(_diasParseados);
+  document.getElementById('preview-area').style.display = 'block';
+  document.getElementById('estado-area').style.display  = 'none';
+
+  // Scroll a la preview
+  document.getElementById('preview-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── PARSEO LOCAL (espeja la lógica del .gs) ─────────────────
+var MESES_ES_JS = {
+  'ene':1,'enero':1,'feb':2,'febrero':2,'mar':3,'marzo':3,
+  'abr':4,'abril':4,'may':5,'mayo':5,'jun':6,'junio':6,
+  'jul':7,'julio':7,'ago':8,'agosto':8,'sep':9,'septiembre':9,
+  'oct':10,'octubre':10,'nov':11,'noviembre':11,'dic':12,'diciembre':12
+};
+var DIAS_LARGO = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+var MESES_LARGO = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+function parsearTextoLocal(texto) {
+  var lineas = texto.split('\n');
+  var dias   = [];
+  var diaActual = null;
+
+  lineas.forEach(function(linea) {
+    linea = linea.trim();
+    if (!linea) return;
+
+    var fecha = intentarParsearFechaJS(linea);
+    if (fecha) {
+      if (diaActual) dias.push(diaActual);
+      diaActual = { fecha: fecha, fechaStr: linea, tareas: [] };
+    } else if (diaActual) {
+      diaActual.tareas.push(linea);
+    }
+  });
+  if (diaActual) dias.push(diaActual);
+  return dias;
+}
+
+function intentarParsearFechaJS(linea) {
+  var match = linea.match(/^(\d{1,2})\s+([a-záéíóúü]+)\s+(\d{4})/i);
+  if (!match) return null;
+  var dia  = parseInt(match[1]);
+  var mes  = MESES_ES_JS[match[2].toLowerCase()];
+  var anio = parseInt(match[3]);
+  if (!mes) return null;
+  var d = new Date(anio, mes - 1, dia);
+  if (isNaN(d.getTime())) return null;
+  return d;
+}
+
+function formatFecha(d) {
+  return d.getDate() + ' de ' + MESES_LARGO[d.getMonth()] + ' ' + d.getFullYear() + ' · ' + DIAS_LARGO[d.getDay()];
+}
+
+// ── RENDER PREVIEW ───────────────────────────────────────────
+function renderPreview(dias) {
+  var container = document.getElementById('preview-dias');
+  container.innerHTML = '';
+
+  dias.forEach(function(dia) {
+    var div = document.createElement('div');
+    div.className = 'preview-dia';
+
+    var headerHtml = '<div class="preview-dia-header">' +
+      '<div class="preview-dia-fecha">' + formatFecha(dia.fecha) +
+      ' <span class="preview-dia-hora">07:30 – 08:00 · BRH-Tareas</span></div>' +
+      '<div class="preview-dia-count">' + dia.tareas.length + ' actividad' + (dia.tareas.length !== 1 ? 'es' : '') + '</div>' +
+      '</div>';
+
+    var tareasHtml = '<div class="preview-tareas">';
+    if (dia.tareas.length === 0) {
+      tareasHtml += '<div class="preview-tarea"><span class="tarea-txt" style="color:#b0bec5;font-style:italic;">Sin actividades registradas</span></div>';
+    } else {
+      dia.tareas.forEach(function(t) {
+        var mNum = t.match(/^(\d+)\s+(.+)/);
+        if (mNum) {
+          tareasHtml += '<div class="preview-tarea"><span class="tarea-num">' + mNum[1] + '</span><span class="tarea-txt">' + escHtml(mNum[2]) + '</span></div>';
+        } else {
+          tareasHtml += '<div class="preview-tarea"><span class="tarea-num">·</span><span class="tarea-txt">' + escHtml(t) + '</span></div>';
+        }
+      });
+    }
+    tareasHtml += '</div>';
+
+    div.innerHTML = headerHtml + tareasHtml;
+    container.appendChild(div);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── CARGAR ───────────────────────────────────────────────────
+async function cargar() {
+  if (!_accessToken) { mostrarEstado('error', 'Sesión expirada. Recargá la página.'); return; }
+  if (!_diasParseados.length) { mostrarEstado('error', 'No hay días para cargar. Verificá primero.'); return; }
+
+  var texto = document.getElementById('texto-tareas').value.trim();
+  var btn   = document.getElementById('btn-cargar');
+  btn.disabled = true;
+  btn.textContent = 'Cargando...';
+
+  document.getElementById('preview-area').style.display = 'none';
+  mostrarEstado('info', 'Enviando al calendario...');
+
+  try {
+    var resp = await fetch(APP_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: _accessToken, texto: texto })
+    });
+    var data = await resp.json();
+
+    if (!data.ok) {
+      mostrarEstado('error', 'Error: ' + (data.error || 'Respuesta inesperada'));
+      return;
+    }
+
+    // Mostrar resultado detallado
+    var html = '<strong>✅ ' + data.eventosCreados + ' evento' + (data.eventosCreados !== 1 ? 's' : '') + ' creado' + (data.eventosCreados !== 1 ? 's' : '') + ' en el calendario</strong>';
+    if (data.detalles && data.detalles.length) {
+      html += '<div class="resultado-lista">';
+      data.detalles.forEach(function(d) {
+        var dotClass = d.estado === 'creado' ? 'res-dot-ok' : d.estado === 'ya_existe' ? 'res-dot-existe' : 'res-dot-error';
+        var label = d.estado === 'creado' ? 'Creado' : d.estado === 'ya_existe' ? 'Ya existía (omitido)' : 'Error: ' + (d.error || '');
+        html += '<div class="res-item"><div class="res-dot ' + dotClass + '"></div>' + d.fecha + ' — ' + label + ' (' + d.tareas + ' actividades)</div>';
+      });
+      html += '</div>';
+    }
+    mostrarEstado('ok', html);
+    limpiarTodo();
+
+  } catch(e) {
+    mostrarEstado('error', 'Error de conexión: ' + e.message);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Cargar al calendario';
+}
+
+// ── ESTADO ───────────────────────────────────────────────────
+function mostrarEstado(tipo, html) {
+  var area = document.getElementById('estado-area');
+  var box  = document.getElementById('estado-box');
+  area.style.display = 'block';
+  box.className = 'estado-box estado-' + tipo;
+  box.innerHTML = html;
+}
+
+// ── LIMPIAR ──────────────────────────────────────────────────
+function limpiar() {
+  document.getElementById('texto-tareas').value = '';
+  document.getElementById('char-count').textContent = '0 caracteres';
+  document.getElementById('preview-area').style.display = 'none';
+  document.getElementById('estado-area').style.display  = 'none';
+  _diasParseados = [];
+}
+
+function limpiarTodo() {
+  limpiar();
+}
+</script>
+
+</body>
+</html>
