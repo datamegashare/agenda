@@ -171,7 +171,7 @@
     <div class="logo">BRH</div>
     <div class="header-sep"></div>
     <div class="header-info">
-      <div class="header-title">Tareas Diarias</div>
+      <div class="header-title">Tareas Diarias v3</div>
       <div class="header-sub">→ Google Calendar</div>
     </div>
   </div>
@@ -180,7 +180,7 @@
     <div class="main-card">
 
       <div class="greeting">
-        <div class="greeting-hi" id="greeting-hi">BRH · Tareas v3</div>
+        <div class="greeting-hi" id="greeting-hi">BRH · Tareas</div>
         <div class="greeting-msg">Pegá el texto de la semana, verificá y cargá al calendario.</div>
       </div>
 
@@ -372,13 +372,22 @@ async function cargar() {
   mostrarEstado('info', 'Enviando al calendario...');
 
   try {
+    // Usamos text/plain para evitar el preflight CORS de Google Apps Script
     var resp = await fetch(APP_URL, {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body:    JSON.stringify({ apiKey: API_KEY, texto: texto })
     });
 
-    var data = await resp.json();
+    var rawText = await resp.text();
+    var data;
+    try {
+      data = JSON.parse(rawText);
+    } catch(parseErr) {
+      mostrarEstado('error', '❌ Respuesta inesperada del servidor. Revisá los logs en Apps Script.');
+      btn.disabled = false; btn.textContent = 'Cargar al calendario';
+      return;
+    }
 
     if (!data.ok) {
       mostrarEstado('error', '❌ Error del servidor: ' + (data.error || 'desconocido'));
