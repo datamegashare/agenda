@@ -3,1016 +3,445 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mesa de Trabajo</title>
-<!-- v2: fix CORS — todas las llamadas a GAS usan POST + Content-Type: text/plain -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗂️</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<title>BRH · Tareas</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ─────────────────────────────────────────────────
-   DESIGN TOKENS
-───────────────────────────────────────────────── */
-:root {
-  --bg       : #f1f5f9;
-  --surface  : #ffffff;
-  --border   : #e2e8f0;
-  --accent   : #d97706;
-  --accent2  : #0f172a;
-  --tag-bg   : #fef3c7;
-  --tag-fg   : #92400e;
-  --tag-sel  : #d97706;
-  --tag-sfg  : #ffffff;
-  --text     : #1e293b;
-  --muted    : #64748b;
-  --success  : #16a34a;
-  --radius   : 12px;
-  --radius-sm: 8px;
-  --shadow   : 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-  --shadow-md: 0 4px 12px rgba(0,0,0,.10);
-  --toolbar-h: 76px;
-  --header-h : 52px;
-}
+  :root {
+    --bg:      #f1f5f9;
+    --surface: #ffffff;
+    --border:  #e2e8f0;
+    --accent:  #d97706;
+    --text:    #1e293b;
+    --muted:   #64748b;
+    --green:   #16a34a;
+    --red:     #dc2626;
+    --radius:  12px;
+    --shadow:  0 1px 3px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
 
-/* ─────────────────────────────────────────────────
-   RESET / BASE
-───────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
-body {
-  background : var(--bg);
-  color      : var(--text);
-  font-family: 'DM Sans', sans-serif;
-  display    : flex;
-  flex-direction: column;
-  font-size  : 14px;
-  line-height: 1.5;
-}
-button { font-family: inherit; cursor: pointer; }
-a { color: inherit; text-decoration: none; }
+  /* ── APP ── */
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
 
-/* ─────────────────────────────────────────────────
-   LOGIN SCREEN
-───────────────────────────────────────────────── */
-#login-screen {
-  display        : flex;
-  flex-direction : column;
-  align-items    : center;
-  justify-content: center;
-  height         : 100vh;
-  gap            : 24px;
-}
-.login-box {
-  background   : var(--surface);
-  border       : 1px solid var(--border);
-  border-radius: var(--radius);
-  padding      : 48px 40px;
-  max-width    : 360px;
-  width        : 100%;
-  text-align   : center;
-  box-shadow   : var(--shadow-md);
-}
-.login-logo  { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: var(--accent); letter-spacing: 3px; margin-bottom: 4px; }
-.login-emoji { font-size: 2.4rem; margin-bottom: 12px; display: block; }
-.login-sub   { font-size: .78rem; color: var(--muted); margin-bottom: 32px; }
-.login-title { font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
-.login-desc  { font-size: .78rem; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
-#g-btn-wrap  { display: flex; justify-content: center; }
+  /* Header */
+  #app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+  }
+  .logo          { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--accent); letter-spacing: 3px; white-space: nowrap; }
+  .header-sep    { width: 1px; height: 28px; background: var(--border); }
+  .header-info   { flex: 1; }
+  .header-title  { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+  .header-sub    { font-size: 0.68rem; color: var(--muted); margin-top: 1px; }
 
-/* ─────────────────────────────────────────────────
-   DENIED SCREEN
-───────────────────────────────────────────────── */
-#denied-screen {
-  display        : none;
-  flex-direction : column;
-  align-items    : center;
-  justify-content: center;
-  height         : 100vh;
-}
-.denied-box {
-  background   : var(--surface);
-  border       : 1px solid var(--border);
-  border-radius: var(--radius);
-  padding      : 48px 40px;
-  max-width    : 380px;
-  width        : 100%;
-  text-align   : center;
-  box-shadow   : var(--shadow-md);
-}
-.denied-icon  { font-size: 3rem; margin-bottom: 16px; display: block; }
-.denied-title { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
-.denied-msg   { font-size: .8rem; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
-.denied-email { background: #f8fafc; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 14px; font-size: .78rem; color: var(--muted); margin-bottom: 20px; }
-.btn-logout   { padding: 8px 20px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: .78rem; cursor: pointer; }
-.btn-logout:hover { background: #f8fafc; }
+  /* Content */
+  #app-content {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 32px 16px 48px;
+  }
+  .main-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 760px;
+    padding: 28px 32px;
+  }
 
-/* ─────────────────────────────────────────────────
-   APP WRAPPER (visible una vez autenticado)
-───────────────────────────────────────────────── */
-#app {
-  display       : none;
-  flex-direction: column;
-  height        : 100vh;
-  overflow      : hidden;
-}
+  /* Greeting */
+  .greeting       { margin-bottom: 24px; }
+  .greeting-hi    { font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem; color: var(--accent); letter-spacing: 2px; line-height: 1; margin-bottom: 4px; }
+  .greeting-msg   { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
 
-/* ─────────────────────────────────────────────────
-   HEADER
-───────────────────────────────────────────────── */
-#app-header {
-  height         : var(--header-h);
-  background     : var(--accent2);
-  display        : flex;
-  align-items    : center;
-  padding        : 0 20px;
-  gap            : 12px;
-  flex-shrink    : 0;
-  border-bottom  : 1px solid rgba(255,255,255,.06);
-}
-.hdr-logo  { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--accent); letter-spacing: 2px; white-space: nowrap; }
-.hdr-name  { font-size: .78rem; color: rgba(255,255,255,.55); white-space: nowrap; }
-.hdr-version { font-size: .68rem; color: rgba(255,255,255,.3); margin-left: 4px; }
-.hdr-sep   { flex: 1; }
-.hdr-refran {
-  font-size    : .72rem;
-  color        : rgba(255,255,255,.4);
-  font-style   : italic;
-  max-width    : 380px;
-  overflow     : hidden;
-  text-overflow: ellipsis;
-  white-space  : nowrap;
-}
-.hdr-refresh {
-  background   : transparent;
-  border       : 1px solid rgba(255,255,255,.18);
-  color        : rgba(255,255,255,.6);
-  border-radius: var(--radius-sm);
-  padding      : 5px 10px;
-  font-size    : .72rem;
-  display      : flex;
-  align-items  : center;
-  gap          : 5px;
-  transition   : all .15s;
-}
-.hdr-refresh:hover { background: rgba(255,255,255,.08); color: #fff; }
-.hdr-refresh.spin svg { animation: spin .6s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.hdr-user  { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,.2); object-fit: cover; background: rgba(255,255,255,.1); }
+  /* Textarea */
+  .field-label {
+    font-size: 0.72rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .char-count { font-weight: 400; letter-spacing: 0; text-transform: none; }
 
-/* ─────────────────────────────────────────────────
-   MAIN LAYOUT: dos paneles + toolbar
-───────────────────────────────────────────────── */
-#main {
-  display : flex;
-  flex    : 1;
-  overflow: hidden;
-  gap     : 0;
-}
+  #texto-tareas {
+    width: 100%; height: 360px;
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'Courier New', monospace; font-size: 0.82rem; line-height: 1.75;
+    color: var(--text); background: #fafbfc;
+    resize: vertical; outline: none; transition: border-color 0.18s;
+  }
+  #texto-tareas:focus         { border-color: var(--accent); background: #fff; }
+  #texto-tareas::placeholder  { color: #b0bec5; }
 
-/* ─────────────────────────────────────────────────
-   PANEL IZQUIERDO — Anotador
-───────────────────────────────────────────────── */
-#panel-left {
-  display       : flex;
-  flex-direction: column;
-  width         : 52%;
-  min-width     : 340px;
-  border-right  : 1px solid var(--border);
-  background    : var(--surface);
-  overflow      : hidden;
-}
-.panel-header {
-  padding        : 14px 16px 10px;
-  border-bottom  : 1px solid var(--border);
-  display        : flex;
-  align-items    : center;
-  gap            : 8px;
-  flex-shrink    : 0;
-}
-.panel-title {
-  font-size  : .68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color      : var(--muted);
-}
+  /* Preview */
+  #preview-area   { margin-top: 18px; display: none; }
+  .preview-title  { font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .preview-dias   { display: flex; flex-direction: column; gap: 8px; }
+  .preview-dia    { border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+  .preview-dia-header {
+    background: #f8fafc; padding: 8px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-dia-fecha  { font-size: 0.8rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .preview-dia-hora   { font-size: 0.68rem; color: var(--muted); background: #eef2f8; padding: 2px 8px; border-radius: 5px; }
+  .preview-dia-count  { font-size: 0.68rem; color: var(--muted); }
+  .preview-tareas     { padding: 10px 14px; display: flex; flex-direction: column; gap: 3px; }
+  .preview-tarea      { font-size: 0.78rem; color: var(--text); line-height: 1.5; display: flex; gap: 8px; }
+  .tarea-num          { font-weight: 600; color: var(--accent); min-width: 14px; flex-shrink: 0; font-size: 0.72rem; margin-top: 2px; }
+  .tarea-txt          { color: var(--muted); }
 
-/* ── Etiquetas ─────────────────────────────────── */
-#etiquetas-wrap {
-  padding   : 10px 16px 8px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.etiq-label {
-  font-size : .67rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color     : var(--muted);
-  margin-bottom: 7px;
-}
-#etiquetas-list {
-  display   : flex;
-  flex-wrap : wrap;
-  gap       : 5px;
-}
-.etiq-chip {
-  padding      : 3px 10px;
-  border-radius: 99px;
-  background   : var(--tag-bg);
-  color        : var(--tag-fg);
-  font-size    : .72rem;
-  font-weight  : 500;
-  border       : 1.5px solid transparent;
-  cursor       : pointer;
-  transition   : all .15s;
-  user-select  : none;
-}
-.etiq-chip:hover  { border-color: var(--accent); }
-.etiq-chip.active {
-  background: var(--tag-sel);
-  color     : var(--tag-sfg);
-  border-color: var(--tag-sel);
-}
+  /* Botones */
+  .btn-row  { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px; border-radius: 8px; border: 1px solid;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500;
+    cursor: pointer; transition: all 0.16s; white-space: nowrap;
+  }
+  .btn:active   { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+  .btn-primary  { background: var(--accent); border-color: #b45309; color: white; }
+  .btn-primary:hover:not(:disabled) { background: #b45309; }
+  .btn-secondary { background: var(--surface); border-color: var(--border); color: var(--muted); }
+  .btn-secondary:hover:not(:disabled) { background: #f8fafc; }
+  .btn-green    { background: var(--green); border-color: #15803d; color: white; }
+  .btn-green:hover:not(:disabled) { background: #15803d; }
+  .btn-danger   { background: var(--surface); border-color: var(--border); color: var(--red); }
+  .btn-danger:hover:not(:disabled) { background: #fef2f2; }
 
-/* ── Editor Quill ──────────────────────────────── */
-#editor-wrap {
-  flex        : 1;
-  display     : flex;
-  flex-direction: column;
-  overflow    : hidden;
-  min-height  : 0;
-}
-/* Quill overrides */
-.ql-toolbar.ql-snow {
-  border       : none;
-  border-bottom: 1px solid var(--border) !important;
-  padding      : 8px 12px;
-  flex-shrink  : 0;
-  background   : #f8fafc;
-}
-.ql-container.ql-snow {
-  border  : none !important;
-  flex    : 1;
-  overflow: auto;
-  font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-}
-.ql-editor { min-height: 160px; padding: 16px 20px; }
-.ql-editor p { margin-bottom: 4px; }
-#quill-host {
-  display       : flex;
-  flex-direction: column;
-  flex          : 1;
-  overflow      : hidden;
-  min-height    : 0;
-}
+  /* Estado */
+  #estado-area { margin-top: 18px; display: none; }
+  .estado-box  { border-radius: 9px; padding: 14px 18px; font-size: 0.82rem; line-height: 1.7; border: 1px solid; }
+  .estado-ok    { background: #f0fdf4; border-color: #86efac; color: #166534; }
+  .estado-error { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+  .estado-info  { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
 
-/* ── Footer del panel izquierdo ────────────────── */
-#panel-left-footer {
-  padding       : 12px 16px;
-  border-top    : 1px solid var(--border);
-  display       : flex;
-  align-items   : center;
-  justify-content: space-between;
-  gap           : 8px;
-  flex-shrink   : 0;
-  background    : #f8fafc;
-}
-.footer-info   { font-size: .7rem; color: var(--muted); }
-.footer-info span { font-weight: 600; color: var(--text); }
+  .resultado-lista { margin-top: 10px; display: flex; flex-direction: column; gap: 3px; }
+  .res-item        { display: flex; align-items: center; gap: 8px; font-size: 0.76rem; }
+  .res-dot         { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .res-dot-creado  { background: var(--green); }
+  .res-dot-existe  { background: var(--accent); }
+  .res-dot-error   { background: var(--red); }
 
-.btn-guardar {
-  display      : flex;
-  align-items  : center;
-  gap          : 6px;
-  padding      : 9px 20px;
-  background   : var(--accent);
-  color        : #fff;
-  border       : none;
-  border-radius: var(--radius-sm);
-  font-size    : .8rem;
-  font-weight  : 600;
-  letter-spacing: .02em;
-  transition   : all .15s;
-  white-space  : nowrap;
-}
-.btn-guardar:hover   { background: #b45309; transform: translateY(-1px); box-shadow: var(--shadow-md); }
-.btn-guardar:active  { transform: translateY(0); }
-.btn-guardar:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .divider { height: 1px; background: var(--border); margin: 22px 0; }
 
-/* Toast de confirmación */
-#toast {
-  position     : fixed;
-  bottom       : calc(var(--toolbar-h) + 16px);
-  left         : 50%;
-  transform    : translateX(-50%) translateY(12px);
-  background   : var(--accent2);
-  color        : #fff;
-  padding      : 10px 20px;
-  border-radius: var(--radius-sm);
-  font-size    : .78rem;
-  font-weight  : 500;
-  opacity      : 0;
-  transition   : all .25s ease;
-  pointer-events: none;
-  z-index      : 999;
-  white-space  : nowrap;
-}
-#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* ─────────────────────────────────────────────────
-   PANEL DERECHO — Hoy
-───────────────────────────────────────────────── */
-#panel-right {
-  display       : flex;
-  flex-direction: column;
-  flex          : 1;
-  overflow      : hidden;
-  background    : var(--bg);
-}
-.panel-right-header {
-  padding       : 14px 18px 10px;
-  display       : flex;
-  align-items   : center;
-  justify-content: space-between;
-  flex-shrink   : 0;
-}
-.today-label {
-  font-family  : 'Bebas Neue', sans-serif;
-  font-size    : 1.4rem;
-  color        : var(--accent2);
-  letter-spacing: 1px;
-}
-.today-date {
-  font-size  : .72rem;
-  color      : var(--muted);
-  font-weight: 500;
-}
-
-/* Refrán */
-#refran-box {
-  margin        : 0 16px 10px;
-  padding       : 10px 14px;
-  background    : var(--surface);
-  border        : 1px solid var(--border);
-  border-left   : 3px solid var(--accent);
-  border-radius : var(--radius-sm);
-  font-size     : .76rem;
-  color         : var(--muted);
-  font-style    : italic;
-  line-height   : 1.5;
-  flex-shrink   : 0;
-}
-
-/* Lista de notas */
-#notas-list {
-  flex       : 1;
-  overflow-y : auto;
-  padding    : 0 16px 12px;
-  display    : flex;
-  flex-direction: column;
-  gap        : 8px;
-}
-.nota-card {
-  background   : var(--surface);
-  border       : 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding      : 10px 14px;
-  transition   : box-shadow .15s;
-  animation    : fadeIn .25s ease;
-}
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.nota-card:hover { box-shadow: var(--shadow-md); }
-.nota-meta {
-  display    : flex;
-  align-items: center;
-  gap        : 8px;
-  margin-bottom: 6px;
-}
-.nota-hora {
-  font-size  : .68rem;
-  color      : var(--muted);
-  font-weight: 500;
-}
-.nota-etiq {
-  font-size    : .66rem;
-  font-weight  : 600;
-  padding      : 2px 8px;
-  border-radius: 99px;
-  background   : var(--tag-bg);
-  color        : var(--tag-fg);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-.nota-contenido {
-  font-size  : .8rem;
-  color      : var(--text);
-  line-height: 1.55;
-}
-.nota-contenido p { margin: 0; }
-.nota-contenido * { max-width: 100%; }
-
-.notas-empty {
-  text-align : center;
-  color      : var(--muted);
-  font-size  : .8rem;
-  padding    : 40px 20px;
-}
-.notas-empty-icon { font-size: 2.4rem; display: block; margin-bottom: 10px; }
-
-/* ─────────────────────────────────────────────────
-   BARRA DE HERRAMIENTAS — estilo Apple Dock
-───────────────────────────────────────────────── */
-#toolbar {
-  height        : var(--toolbar-h);
-  background    : rgba(255,255,255,.88);
-  backdrop-filter: blur(12px);
-  border-top    : 1px solid var(--border);
-  display       : flex;
-  align-items   : center;
-  justify-content: center;
-  padding       : 0 20px;
-  gap           : 6px;
-  flex-shrink   : 0;
-  overflow-x    : auto;
-  overflow-y    : hidden;
-}
-#toolbar::-webkit-scrollbar { height: 3px; }
-#toolbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-.tool-btn {
-  display      : flex;
-  flex-direction: column;
-  align-items  : center;
-  gap          : 4px;
-  padding      : 8px 12px;
-  border-radius: var(--radius-sm);
-  border       : none;
-  background   : transparent;
-  cursor       : pointer;
-  transition   : all .15s;
-  min-width    : 60px;
-  white-space  : nowrap;
-  text-decoration: none;
-  color        : var(--text);
-}
-.tool-btn:hover {
-  background   : rgba(0,0,0,.05);
-  transform    : translateY(-3px) scale(1.05);
-}
-.tool-btn:active { transform: translateY(-1px) scale(1.02); }
-.tool-emoji { font-size: 1.6rem; line-height: 1; }
-.tool-label { font-size: .6rem; color: var(--muted); font-weight: 500; }
-.tool-btn:hover .tool-label { color: var(--text); }
-
-/* ─────────────────────────────────────────────────
-   SKELETON / LOADING
-───────────────────────────────────────────────── */
-.skel {
-  background  : linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-  background-size: 200% 100%;
-  animation   : shimmer 1.4s infinite;
-  border-radius: var(--radius-sm);
-}
-@keyframes shimmer { to { background-position: -200% 0; } }
-
-/* ─────────────────────────────────────────────────
-   SCROLLBARS
-───────────────────────────────────────────────── */
-::-webkit-scrollbar       { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #c0c8d4; }
-
-/* ─────────────────────────────────────────────────
-   RESPONSIVE — tablet / mobile
-───────────────────────────────────────────────── */
-@media (max-width: 720px) {
-  #main { flex-direction: column; overflow-y: auto; overflow-x: hidden; }
-  #panel-left { width: 100%; border-right: none; border-bottom: 1px solid var(--border); min-height: 55vh; }
-  #panel-right { min-height: 40vh; }
-  .hdr-refran { display: none; }
-}
+  @media (max-width: 500px) {
+    .main-card    { padding: 20px 16px; }
+    #texto-tareas { height: 280px; }
+    .btn-row      { flex-direction: column; }
+    .btn          { justify-content: center; }
+  }
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════
-     LOGIN SCREEN
-══════════════════════════════════════════════ -->
-<div id="login-screen">
-  <div class="login-box">
-    <span class="login-emoji" id="login-emoji">🗂️</span>
-    <div class="login-logo" id="login-logo">MESA DE TRABAJO</div>
-    <div class="login-sub">v1 · Workspace personal</div>
-    <div class="login-title">Accedé con tu cuenta Google</div>
-    <div class="login-desc">
-      Solo cuentas autorizadas por el administrador<br>
-      pueden acceder a este workspace.
-    </div>
-    <div id="g-btn-wrap"></div>
-  </div>
-</div>
+<!-- ══════════════════════════════════════════════════════════
+     CONFIGURACIÓN  —  editá estas dos líneas
+     ══════════════════════════════════════════════════════════ -->
+<script>
+  var APP_URL = 'https://script.google.com/macros/s/AKfycbw8VvoUwkWWdkB0UDdBXhh6AwxJoDkC3Q1kagrOZ09_9zocBpLnnXAzk06cOOpCg4iE/exec';
+  var API_KEY = 'brh-3340-blanca';
+</script>
+<!-- ══════════════════════════════════════════════════════════ -->
 
-<!-- ══════════════════════════════════════════════
-     ACCESO DENEGADO
-══════════════════════════════════════════════ -->
-<div id="denied-screen">
-  <div class="denied-box">
-    <span class="denied-icon">🔒</span>
-    <div class="denied-title">Acceso no autorizado</div>
-    <div class="denied-msg">
-      Tu cuenta no tiene permiso para acceder a este workspace.<br>
-      Contactá al administrador.
-    </div>
-    <div class="denied-email" id="denied-email-display"></div>
-    <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
-  </div>
-</div>
 
-<!-- ══════════════════════════════════════════════
-     APP
-══════════════════════════════════════════════ -->
+<!-- APP -->
 <div id="app">
 
-  <!-- HEADER -->
-  <header id="app-header">
-    <span id="hdr-emoji" style="font-size:1.3rem">🗂️</span>
-    <span class="hdr-logo" id="hdr-logo">MESA DE TRABAJO</span>
-    <span class="hdr-name" id="hdr-nombre"></span>
-    <span class="hdr-version">v1</span>
-    <span class="hdr-sep"></span>
-    <span class="hdr-refran" id="hdr-refran"></span>
-    <button class="hdr-refresh" id="btn-refresh" onclick="cargarDatos(true)" title="Actualizar">
-      <svg id="refresh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
-        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-      </svg>
-      Actualizar
-    </button>
-    <img class="hdr-user" id="hdr-avatar" src="" alt="avatar" onerror="this.style.display='none'">
-  </header>
-
-  <!-- MAIN -->
-  <div id="main">
-
-    <!-- PANEL IZQUIERDO: ANOTADOR -->
-    <div id="panel-left">
-      <div class="panel-header">
-        <span style="font-size:.9rem">✏️</span>
-        <span class="panel-title">Anotador</span>
-      </div>
-
-      <!-- Etiquetas -->
-      <div id="etiquetas-wrap">
-        <div class="etiq-label">Etiqueta</div>
-        <div id="etiquetas-list">
-          <!-- se llena con JS -->
-        </div>
-      </div>
-
-      <!-- Editor Quill -->
-      <div id="editor-wrap">
-        <div id="quill-host">
-          <div id="quill-editor"></div>
-        </div>
-      </div>
-
-      <!-- Footer / Guardar -->
-      <div id="panel-left-footer">
-        <div class="footer-info">
-          Etiqueta: <span id="etiq-seleccionada">—</span>
-        </div>
-        <button class="btn-guardar" id="btn-guardar" onclick="guardarNota()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-          </svg>
-          Guardar nota
-        </button>
-      </div>
+  <div id="app-header">
+    <div class="logo">BRH</div>
+    <div class="header-sep"></div>
+    <div class="header-info">
+      <div class="header-title">Tareas Diarias v3</div>
+      <div class="header-sub">→ Google Calendar</div>
     </div>
-
-    <!-- PANEL DERECHO: HOY -->
-    <div id="panel-right">
-      <div class="panel-right-header">
-        <span class="today-label">HOY</span>
-        <span class="today-date" id="fecha-hoy"></span>
-      </div>
-
-      <!-- Refrán -->
-      <div id="refran-box">…</div>
-
-      <!-- Lista de notas del día -->
-      <div id="notas-list">
-        <div class="notas-empty">
-          <span class="notas-empty-icon">📋</span>
-          Cargando notas de hoy…
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /#main -->
-
-  <!-- TOOLBAR -->
-  <div id="toolbar">
-    <!-- se llena con JS -->
   </div>
 
-</div><!-- /#app -->
+  <div id="app-content">
+    <div class="main-card">
 
-<!-- Toast -->
-<div id="toast"></div>
-
-<!-- ══════════════════════════════════════════════
-     JAVASCRIPT  — v2
-     CORS FIX: todas las llamadas a GAS usan POST
-     con Content-Type: text/plain para evitar el
-     preflight OPTIONS que GAS no soporta.
-     La URL del Web App va solo en el body JSON,
-     nunca en query params (evita truncamiento).
-══════════════════════════════════════════════ -->
-<script>
-'use strict';
-
-/* ──────────────────────────────────────────────
-   CONFIGURACIÓN — EDITAR ANTES DE PUBLICAR
-────────────────────────────────────────────── */
-const GAS_URL    = 'https://script.google.com/macros/s/AKfycbzhcy1THlO2qwvx8clyaHRN2xAG8hX6rTsXelELjGBA83gm_358f68BHjLJbbX_tTjB/exec';        // ← URL de tu Web App GAS
-const CLIENT_ID  = '985022387906-5h3qtmq6jifdl5jdv77o4amf9nb3mcdn.apps.googleusercontent.com';   // ← OAuth 2.0 Client ID
-
-/* ──────────────────────────────────────────────
-   ESTADO GLOBAL
-────────────────────────────────────────────── */
-const estado = {
-  usuario    : null,   // { email, nombre, avatar }
-  etiqActiva : null,   // string — etiqueta seleccionada
-  quill      : null,   // instancia Quill
-  refrescoId : null,   // setInterval ID
-  datos      : null    // último payload del servidor
-};
-
-/* ──────────────────────────────────────────────
-   CAPA DE COMUNICACIÓN CON GAS
-   ─────────────────────────────────────────────
-   PROBLEMA: GAS (script.google.com) no envía el
-   header Access-Control-Allow-Origin en respuestas
-   a fetch() GET/POST desde dominios externos.
-   GitHub Pages (datamegashare.github.io) es un
-   dominio externo → el navegador bloquea la resp.
-
-   SOLUCIÓN probada (ver index_agenda.html):
-   · Usar POST con Content-Type: 'text/plain'
-   · Esto evita el "preflight" OPTIONS que GAS
-     no responde correctamente.
-   · El body lleva un JSON stringify-ado como string.
-   · GAS lo recibe en e.postData.contents y lo parsea.
-   · Funciona con doPost(e) en el .gs.
-────────────────────────────────────────────── */
-async function gasPost(payload) {
-  const resp = await fetch(GAS_URL, {
-    method  : 'POST',
-    headers : { 'Content-Type': 'text/plain' },
-    body    : JSON.stringify(payload)
-  });
-  const rawText = await resp.text();
-  try {
-    return JSON.parse(rawText);
-  } catch {
-    throw new Error('Respuesta no-JSON del servidor: ' + rawText.slice(0, 120));
-  }
-}
-
-/* ──────────────────────────────────────────────
-   UTILS
-────────────────────────────────────────────── */
-function mostrarToast(msg, dur = 3200) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
-}
-
-function formatearHora(fechaHoraStr) {
-  if (!fechaHoraStr) return '';
-  try {
-    const d = new Date(fechaHoraStr.replace(' ', 'T'));
-    return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-  } catch { return String(fechaHoraStr).slice(11, 16) || ''; }
-}
-
-function fechaHoyFormateada() {
-  return new Date().toLocaleDateString('es-AR', {
-    weekday: 'long', day: 'numeric', month: 'long'
-  });
-}
-
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-/* ──────────────────────────────────────────────
-   AUTENTICACIÓN GOOGLE (GSI)
-────────────────────────────────────────────── */
-window.onload = function() {
-  // ── Restaurar sesión de sessionStorage ──────
-  const guardada = sessionStorage.getItem('mesa_usuario');
-  if (guardada) {
-    try {
-      estado.usuario = JSON.parse(guardada);
-      iniciarApp();
-      return;
-    } catch { sessionStorage.removeItem('mesa_usuario'); }
-  }
-
-  // ── Inicializar Google Identity Services ────
-  google.accounts.id.initialize({
-    client_id            : CLIENT_ID,
-    callback             : manejarCredencial,
-    auto_select          : true,
-    cancel_on_tap_outside: false
-  });
-
-  google.accounts.id.renderButton(
-    document.getElementById('g-btn-wrap'),
-    { theme: 'outline', size: 'large', text: 'signin_with_google', shape: 'pill', width: 260 }
-  );
-
-  google.accounts.id.prompt();
-};
-
-async function manejarCredencial(response) {
-  try {
-    // Decodificar JWT del token de Google (sin librería extra)
-    const b64      = response.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const payload  = JSON.parse(atob(b64));
-    const usuario  = {
-      email  : payload.email   || '',
-      nombre : payload.name    || '',
-      avatar : payload.picture || ''
-    };
-
-    // Verificar autorización vía doPost (evita CORS)
-    let autorizado = false;
-    try {
-      const data = await gasPost({ action: 'verificar', email: usuario.email });
-      autorizado = !!data.autorizado;
-    } catch (netErr) {
-      // Si no se puede verificar (URL no configurada aún), permitir igualmente
-      // El servidor filtrará en cada llamada posterior
-      console.warn('No se pudo verificar acceso:', netErr.message);
-      autorizado = true;
-    }
-
-    if (autorizado) {
-      estado.usuario = usuario;
-      sessionStorage.setItem('mesa_usuario', JSON.stringify(usuario));
-      iniciarApp();
-    } else {
-      document.getElementById('login-screen').style.display  = 'none';
-      document.getElementById('denied-screen').style.display = 'flex';
-      document.getElementById('denied-email-display').textContent = usuario.email;
-    }
-
-  } catch (e) {
-    console.error('Error en manejarCredencial:', e);
-    mostrarToast('⚠ Error al iniciar sesión. Intentá de nuevo.');
-  }
-}
-
-function cerrarSesion() {
-  sessionStorage.removeItem('mesa_usuario');
-  estado.usuario = null;
-  if (estado.refrescoId) clearInterval(estado.refrescoId);
-  document.getElementById('app').style.display           = 'none';
-  document.getElementById('denied-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display  = 'flex';
-  // Re-inicializar botón Google
-  google.accounts.id.prompt();
-}
-
-/* ──────────────────────────────────────────────
-   INICIO DE LA APP
-────────────────────────────────────────────── */
-function iniciarApp() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display          = 'flex';
-
-  const av = document.getElementById('hdr-avatar');
-  if (estado.usuario.avatar) av.src = estado.usuario.avatar;
-
-  document.getElementById('fecha-hoy').textContent = fechaHoyFormateada();
-
-  iniciarQuill();
-  cargarDatos(false);
-
-  if (estado.refrescoId) clearInterval(estado.refrescoId);
-  estado.refrescoId = setInterval(() => cargarDatos(false), 15 * 60 * 1000);
-}
-
-/* ──────────────────────────────────────────────
-   QUILL — editor de texto enriquecido
-────────────────────────────────────────────── */
-function iniciarQuill() {
-  if (estado.quill) return;
-
-  estado.quill = new Quill('#quill-editor', {
-    theme      : 'snow',
-    placeholder: 'Escribí tu nota acá… (soporta negrita, cursiva, listas)',
-    modules    : {
-      toolbar: [
-        ['bold', 'italic', 'underline'],
-        [{ list: 'ordered' }, { list: 'bullet' }],
-        ['link'],
-        ['clean']
-      ]
-    }
-  });
-
-  // Dar al contenedor flex height para que se expanda
-  const container = document.querySelector('#quill-host .ql-container');
-  if (container) {
-    container.style.flex     = '1';
-    container.style.overflow = 'auto';
-  }
-}
-
-/* ──────────────────────────────────────────────
-   CARGAR DATOS DESDE GAS (via POST)
-────────────────────────────────────────────── */
-async function cargarDatos(manual = false) {
-  const btnRef = document.getElementById('btn-refresh');
-  const icon   = document.getElementById('refresh-icon');
-  btnRef.disabled = true;
-  icon.parentElement.classList.add('spin');
-
-  try {
-    const data = await gasPost({
-      action : 'getData',
-      email  : estado.usuario?.email || ''
-    });
-
-    estado.datos = data;
-    renderizarDatos(data);
-    if (manual) mostrarToast('✓ Datos actualizados');
-
-  } catch (err) {
-    console.error('Error cargando datos:', err);
-    if (manual) mostrarToast('⚠ Error al conectar. Revisá GAS_URL en el HTML.');
-  } finally {
-    btnRef.disabled = false;
-    icon.parentElement.classList.remove('spin');
-  }
-}
-
-/* ──────────────────────────────────────────────
-   RENDERIZADO
-────────────────────────────────────────────── */
-function renderizarDatos(data) {
-  if (!data || !data.ok) return;
-  const cfg = data.config || {};
-
-  if (cfg.nombre) {
-    document.getElementById('hdr-logo').textContent    = cfg.nombre.toUpperCase();
-    document.getElementById('login-logo').textContent  = cfg.nombre.toUpperCase();
-  }
-  if (cfg.logoEmoji) {
-    document.getElementById('hdr-emoji').textContent   = cfg.logoEmoji;
-    document.getElementById('login-emoji').textContent = cfg.logoEmoji;
-  }
-  if (data.refran) {
-    const r = '«' + data.refran + '»';
-    document.getElementById('hdr-refran').textContent = r;
-    document.getElementById('refran-box').textContent = r;
-  }
-
-  renderEtiquetas(data.etiquetas    || []);
-  renderNotasHoy(data.notasHoy      || []);
-  renderToolbar(data.herramientas   || []);
-}
-
-function renderEtiquetas(etiquetas) {
-  const lista = document.getElementById('etiquetas-list');
-  lista.innerHTML = '';
-  etiquetas.forEach(e => {
-    const chip       = document.createElement('button');
-    chip.className   = 'etiq-chip';
-    chip.textContent = e;
-    chip.onclick     = () => seleccionarEtiqueta(e, chip);
-    lista.appendChild(chip);
-  });
-  if (etiquetas.length > 0) seleccionarEtiqueta(etiquetas[0], lista.firstChild);
-}
-
-function seleccionarEtiqueta(nombre, chip) {
-  document.querySelectorAll('.etiq-chip').forEach(c => c.classList.remove('active'));
-  chip.classList.add('active');
-  estado.etiqActiva = nombre;
-  document.getElementById('etiq-seleccionada').textContent = nombre;
-}
-
-function renderNotasHoy(notas) {
-  const lista = document.getElementById('notas-list');
-  lista.innerHTML = '';
-
-  if (!notas.length) {
-    lista.innerHTML = `
-      <div class="notas-empty">
-        <span class="notas-empty-icon">📋</span>
-        No hay notas registradas hoy.<br>
-        <small style="color:var(--muted);font-size:.72rem;margin-top:6px;display:block">
-          Escribí tu primera nota en el anotador ←
-        </small>
-      </div>`;
-    return;
-  }
-
-  notas.forEach(nota => {
-    const card       = document.createElement('div');
-    card.className   = 'nota-card';
-    card.innerHTML   = `
-      <div class="nota-meta">
-        <span class="nota-hora">${formatearHora(nota.fechaHora)}</span>
-        <span class="nota-etiq">${escHtml(nota.etiqueta)}</span>
+      <div class="greeting">
+        <div class="greeting-hi" id="greeting-hi">BRH · Tareas</div>
+        <div class="greeting-msg">Pegá el texto de la semana, verificá y cargá al calendario.</div>
       </div>
-      <div class="nota-contenido">${nota.contenido}</div>`;
-    lista.appendChild(card);
+
+      <div class="field-label">
+        Texto de actividades
+        <span class="char-count" id="char-count">0 caracteres</span>
+      </div>
+      <textarea
+        id="texto-tareas"
+        placeholder="10 abr 2026 Viernes&#10;3 IS&#10;2 DataMegaShare, integrar lecturas de clima al sitio&#10;1 Herramientas: Mejora de Dashboard WEB&#10;0 Home Office&#10;&#10;9 abr 2026 Jueves&#10;3  Rio Tinto Odoo: demo 14:30 a 15:30&#10;..."
+      ></textarea>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="verificar()" id="btn-verificar">Verificar</button>
+        <button class="btn btn-secondary" onclick="limpiar()">Limpiar</button>
+      </div>
+
+      <!-- Preview -->
+      <div id="preview-area">
+        <div class="divider"></div>
+        <div class="preview-title">Vista previa — días detectados</div>
+        <div class="preview-dias" id="preview-dias"></div>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="cargar()" id="btn-cargar">Cargar al calendario</button>
+          <button class="btn btn-danger" onclick="limpiar()">Cancelar</button>
+        </div>
+      </div>
+
+      <!-- Estado -->
+      <div id="estado-area">
+        <div class="divider" style="margin-top:14px;"></div>
+        <div id="estado-box" class="estado-box"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+
+<script>
+// ── ESTADO GLOBAL ────────────────────────────────────────────
+var _diasParseados = [];
+
+// Saludo según hora
+(function() {
+  var h = new Date().getHours();
+  var saludo = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+  document.getElementById('greeting-hi').textContent = saludo;
+})();
+
+// ── TEXTAREA ─────────────────────────────────────────────────
+document.getElementById('texto-tareas').addEventListener('input', function() {
+  document.getElementById('char-count').textContent = this.value.length + ' caracteres';
+  document.getElementById('preview-area').style.display = 'none';
+  document.getElementById('estado-area').style.display  = 'none';
+});
+
+// ── MESES / DÍAS ─────────────────────────────────────────────
+var MESES_ES_JS = {
+  'ene':1,'enero':1,'feb':2,'febrero':2,'mar':3,'marzo':3,
+  'abr':4,'abril':4,'may':5,'mayo':5,'jun':6,'junio':6,
+  'jul':7,'julio':7,'ago':8,'agosto':8,'sep':9,'septiembre':9,
+  'oct':10,'octubre':10,'nov':11,'noviembre':11,'dic':12,'diciembre':12
+};
+var DIAS_LARGO  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+var MESES_LARGO = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+// ── PARSEO LOCAL ─────────────────────────────────────────────
+function parsearTextoLocal(texto) {
+  var lineas = texto.split('\n');
+  var dias   = [];
+  var diaActual   = null;
+  var tareaActual = null;
+
+  lineas.forEach(function(linea) {
+    linea = linea.trim();
+    if (!linea) return;
+
+    var fecha = intentarParsearFechaJS(linea);
+    if (fecha) {
+      if (tareaActual && diaActual) diaActual.tareas.push(tareaActual);
+      if (diaActual) dias.push(diaActual);
+      tareaActual = null;
+      diaActual   = { fecha: fecha, tareas: [] };
+    } else if (diaActual) {
+      var m = linea.match(/^(\d+)\s+([\s\S]+)/);
+      if (m) {
+        if (tareaActual) diaActual.tareas.push(tareaActual);
+        tareaActual = { num: parseInt(m[1]), texto: m[2].trim(), sublineas: [] };
+      } else if (tareaActual) {
+        tareaActual.sublineas.push(linea);
+      } else {
+        diaActual.tareas.push({ num: null, texto: linea, sublineas: [] });
+      }
+    }
   });
+
+  if (tareaActual && diaActual) diaActual.tareas.push(tareaActual);
+  if (diaActual) dias.push(diaActual);
+  return dias;
 }
 
-function renderToolbar(herramientas) {
-  const bar = document.getElementById('toolbar');
-  bar.innerHTML = '';
+function intentarParsearFechaJS(linea) {
+  var m = linea.match(/^(\d{1,2})\s+([a-záéíóúü]+)\s+(\d{4})/i);
+  if (!m) return null;
+  var mes = MESES_ES_JS[m[2].toLowerCase()];
+  if (!mes) return null;
+  var d = new Date(parseInt(m[3]), mes - 1, parseInt(m[1]));
+  return isNaN(d.getTime()) ? null : d;
+}
 
-  if (!herramientas.length) {
-    bar.innerHTML = '<span style="font-size:.72rem;color:var(--muted)">Configurá las herramientas en la hoja "Herramientas" del Sheet</span>';
+function formatFecha(d) {
+  return d.getDate() + ' de ' + MESES_LARGO[d.getMonth()] + ' ' + d.getFullYear() + ' · ' + DIAS_LARGO[d.getDay()];
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── VERIFICAR ────────────────────────────────────────────────
+function verificar() {
+  var texto = document.getElementById('texto-tareas').value.trim();
+  if (!texto) { mostrarEstado('info', 'Pegá el texto de la semana primero.'); return; }
+
+  _diasParseados = parsearTextoLocal(texto);
+
+  if (!_diasParseados.length) {
+    mostrarEstado('error', 'No se encontraron fechas válidas.<br>Formato esperado: <strong>10 abr 2026 Viernes</strong>');
     return;
   }
 
-  herramientas.forEach(h => {
-    const a      = document.createElement('a');
-    a.className  = 'tool-btn';
-    a.href       = h.url;
-    a.target     = '_blank';
-    a.rel        = 'noopener';
-    a.title      = h.nombre;
-    a.innerHTML  = `
-      <span class="tool-emoji">${h.emoji || '🔗'}</span>
-      <span class="tool-label">${escHtml(h.nombre)}</span>`;
-    bar.appendChild(a);
+  renderPreview(_diasParseados);
+  document.getElementById('preview-area').style.display = 'block';
+  document.getElementById('estado-area').style.display  = 'none';
+  document.getElementById('preview-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── RENDER PREVIEW ───────────────────────────────────────────
+function renderPreview(dias) {
+  var container = document.getElementById('preview-dias');
+  container.innerHTML = '';
+
+  dias.forEach(function(dia) {
+    // Ordenar 0 → N
+    var tareasOrd = dia.tareas.slice().sort(function(a,b){
+      return (a.num===null?999:a.num) - (b.num===null?999:b.num);
+    });
+    var cant = tareasOrd.filter(function(t){return t.num!==null;}).length;
+
+    var div = document.createElement('div');
+    div.className = 'preview-dia';
+
+    var html = '<div class="preview-dia-header">' +
+      '<div class="preview-dia-fecha">' + formatFecha(dia.fecha) +
+      ' <span class="preview-dia-hora">07:00 · BRH</span></div>' +
+      '<div class="preview-dia-count">' + cant + ' actividad' + (cant!==1?'es':'') + '</div>' +
+      '</div>';
+
+    html += '<div class="preview-tareas">';
+    if (tareasOrd.length === 0) {
+      html += '<div class="preview-tarea"><span class="tarea-txt" style="color:#b0bec5;font-style:italic;">Sin actividades</span></div>';
+    } else {
+      tareasOrd.forEach(function(t) {
+        var num = t.num !== null ? t.num : '·';
+        html += '<div class="preview-tarea"><span class="tarea-num">' + num + '</span><span class="tarea-txt">' + escHtml(t.texto) + '</span></div>';
+        t.sublineas.forEach(function(sl) {
+          html += '<div class="preview-tarea"><span class="tarea-num" style="opacity:0"> </span><span class="tarea-txt" style="color:#94a3b8;font-size:0.74rem;">' + escHtml(sl) + '</span></div>';
+        });
+      });
+    }
+    html += '</div>';
+
+    div.innerHTML = html;
+    container.appendChild(div);
   });
 }
 
-/* ──────────────────────────────────────────────
-   GUARDAR NOTA (via POST)
-────────────────────────────────────────────── */
-async function guardarNota() {
-  if (!estado.quill)   return;
-  if (!estado.usuario) { mostrarToast('⚠ No estás autenticado.'); return; }
+// ── CARGAR ───────────────────────────────────────────────────
+async function cargar() {
+  if (!_diasParseados.length) { mostrarEstado('error', 'No hay días para cargar. Verificá primero.'); return; }
 
-  const contenidoHtml = estado.quill.getSemanticHTML();
-  const textoPlano    = estado.quill.getText().trim();
-
-  if (!textoPlano) { mostrarToast('⚠ La nota está vacía.'); return; }
-
-  const btn      = document.getElementById('btn-guardar');
-  const etiqueta = estado.etiqActiva || 'General';
-
+  var texto = document.getElementById('texto-tareas').value.trim();
+  var btn   = document.getElementById('btn-cargar');
   btn.disabled    = true;
-  btn.textContent = 'Guardando…';
+  btn.textContent = 'Cargando...';
+
+  document.getElementById('preview-area').style.display = 'none';
+  mostrarEstado('info', 'Enviando al calendario...');
 
   try {
-    const data = await gasPost({
-      action   : 'guardarNota',
-      email    : estado.usuario.email,
-      etiqueta : etiqueta,
-      contenido: contenidoHtml,
-      fechaHora: new Date().toISOString()
+    // Usamos text/plain para evitar el preflight CORS de Google Apps Script
+    var resp = await fetch(APP_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body:    JSON.stringify({ apiKey: API_KEY, texto: texto })
     });
 
-    if (data.ok) {
-      mostrarToast('✓ Nota guardada · ' + etiqueta);
-      estado.quill.setContents([]);
-      cargarDatos(false);   // refrescar lista "Hoy"
-    } else {
-      mostrarToast('⚠ ' + (data.error || 'Error al guardar'));
+    var rawText = await resp.text();
+    var data;
+    try {
+      data = JSON.parse(rawText);
+    } catch(parseErr) {
+      mostrarEstado('error', '❌ Respuesta inesperada del servidor. Revisá los logs en Apps Script.');
+      btn.disabled = false; btn.textContent = 'Cargar al calendario';
+      return;
     }
 
-  } catch (err) {
-    console.error('Error guardando nota:', err);
-    mostrarToast('⚠ Error de red al guardar. Revisá GAS_URL.');
-  } finally {
-    btn.disabled  = false;
-    btn.innerHTML = `
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-      </svg>
-      Guardar nota`;
+    if (!data.ok) {
+      mostrarEstado('error', '❌ Error del servidor: ' + (data.error || 'desconocido'));
+      btn.disabled = false;
+      btn.textContent = 'Cargar al calendario';
+      return;
+    }
+
+    // Mostrar resultado detallado
+    var html = '<strong>✅ Listo.</strong> ' + data.eventosCreados + ' evento' +
+               (data.eventosCreados !== 1 ? 's' : '') + ' creado' +
+               (data.eventosCreados !== 1 ? 's' : '') + ' de ' + data.diasProcesados + ' día' +
+               (data.diasProcesados !== 1 ? 's' : '') + '.';
+
+    if (data.detalles && data.detalles.length) {
+      html += '<div class="resultado-lista">';
+      data.detalles.forEach(function(d) {
+        var cls  = d.estado === 'creado' ? 'creado' : d.estado === 'ya_existe' ? 'existe' : 'error';
+        var icon = d.estado === 'creado' ? '✓' : d.estado === 'ya_existe' ? '–' : '✗';
+        var msg  = d.estado === 'creado'    ? (d.titulo || d.fecha) :
+                   d.estado === 'ya_existe' ? d.fecha + ' (ya existe, omitido)' :
+                   d.fecha + ': ' + (d.error || 'error');
+        html += '<div class="res-item"><span class="res-dot res-dot-' + cls + '"></span>' + icon + ' ' + escHtml(msg) + '</div>';
+      });
+      html += '</div>';
+    }
+
+    mostrarEstado('ok', html);
+    limpiar();
+
+  } catch(e) {
+    mostrarEstado('error', '❌ Error de conexión: ' + e.message);
   }
+
+  btn.disabled    = false;
+  btn.textContent = 'Cargar al calendario';
+}
+
+// ── ESTADO ───────────────────────────────────────────────────
+function mostrarEstado(tipo, html) {
+  var area = document.getElementById('estado-area');
+  var box  = document.getElementById('estado-box');
+  area.style.display = 'block';
+  box.className      = 'estado-box estado-' + tipo;
+  box.innerHTML      = html;
+}
+
+// ── LIMPIAR ──────────────────────────────────────────────────
+function limpiar() {
+  document.getElementById('texto-tareas').value         = '';
+  document.getElementById('char-count').textContent     = '0 caracteres';
+  document.getElementById('preview-area').style.display = 'none';
+  document.getElementById('estado-area').style.display  = 'none';
+  _diasParseados = [];
 }
 </script>
 
